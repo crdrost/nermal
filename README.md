@@ -3,10 +3,10 @@ Nermal makes securing your JavaScript application's data much easier.
 
 Nermal does private-key *authenticated encryption* with a trusted algorithm 
 ([AES-256][aes]/[GCM][gcm]) implemented by a trusted library ([SJCL][sjcl]) with
-the best existent key-derivation system (scrypt). It keeps track of salts for 
-its keys, and automatically generates random nonces. It also pads the data with 
-a random number of random bytes, which makes it much harder to determine what 
-sort of operations are being performed on the data.
+the best existent key-derivation system ([scrypt][scrypt]). It keeps track of
+salts for its keys, and automatically generates random nonces. It also pads the
+data with a random number of random bytes, which makes it much harder to
+determine what sort of operations are being performed on the data.
 
 Authenticated encryption basically means that when you decrypt the data, you can
 be confident that it's something which you encrypted, in the format that you
