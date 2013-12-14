@@ -1,6 +1,6 @@
 {
     "name": "nermal",
-    "version": "0.0.0",
+    "version": "1.0.0",
     "description": "The cutest secure JavaScript authenticated encryption container",
     "keywords": ["crypto", "cryptography", "encryption", "AES", "scrypt", "security", "garfield"],
     "homepage": "https://github.com/drostie/nermal/",
@@ -10,7 +10,7 @@
     "author": "Chris Drost <chris.drostie@gmail.com> (http://drostie.org/)",
     "files": ["./nermal.js"],
     "main": "nermal",
-    "scripts": { "test": "node test/all.js" },
+    "scripts": { "test": "node test.js" },
     "dependencies": {"js-scrypt-em": ">=0.0.1", "sjcl": "~1"},
     "engines": {"node": ">=0.10.0"},
     "private": true

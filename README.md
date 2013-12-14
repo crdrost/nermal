@@ -23,7 +23,8 @@ encrypts JavaScript strings and [Uint8Array][uint8]s, leaving questions of how
 your data is serialized to you. Other than putting data into/out of the box 
 with `encrypt` and `decrypt`, nermal provides `newKey` and `getKey` for 
 applications which want to manage keys (so that you don't have to wait for 
-scrypt twice), and that's it. 
+scrypt twice), and that's it. Further documentation is visible in
+`nermal/API.md`. 
 
 Finally, nermal is open-source. All of the components of nermal, as well as 
 nermal itself, are licensed under a 2-clause BSD license. You can use them
