@@ -1,4 +1,4 @@
-/*! nermal v1.1.0 | (c) 2013 Chris Drost | Open-source under the 2-clause BSD License
+/*! nermal v1.1.2 | (c) 2013 Chris Drost | Open-source under the 2-clause BSD License
  */
 
 /*global window, exports, require, Buffer, Uint8Array */
@@ -7,7 +7,7 @@
 var nermal = (function (api) {
     "use strict";
     var b64, sjcl, scrypt, crypto, rand, ba_from_bytes, bytes_from_ba, version, re_compatible, err;
-    version = "nermal 1.1.0";
+    version = "nermal 1.1.2";
     re_compatible = /^nermal 1\./;
     err = function (mode, msg) { return new Error("nermal/" + mode + ": " + msg); };
 
