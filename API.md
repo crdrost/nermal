@@ -128,8 +128,10 @@ Derive a 256-bit key given a salt and password. This is presently implemented as
 
     _pad:    (bytes: Uint8Array) -> Uint8Array!
 
-Pad the byte array by formatting it as a netstring and then appending some
-random number (0 - 2048) of random bytes.
+Pad the byte array by formatting it as a [netstring][netstr] and then appending
+some random number (0 - 2048) of random bytes.
+
+[netstr]: https://en.wikipedia.org/wiki/Netstring "Netstring - Wikipedia, the free encyclopedia"
 
 ### _unpad
 

@@ -1,4 +1,4 @@
-/*! nermal v1.0.0 | (c) 2013 Chris Drost | Open-source under the 2-clause BSD License
+/*! nermal v1.1.0 | (c) 2013 Chris Drost | Open-source under the 2-clause BSD License
  */
 
 /*global window, exports, require, Buffer, Uint8Array */
@@ -7,7 +7,7 @@
 var nermal = (function (api) {
     "use strict";
     var b64, sjcl, scrypt, crypto, rand, ba_from_bytes, bytes_from_ba, version, re_compatible, err;
-    version = "nermal 1.0.0";
+    version = "nermal 1.1.0";
     re_compatible = /^nermal 1\./;
     err = function (mode, msg) { return new Error("nermal/" + mode + ": " + msg); };
 
@@ -105,10 +105,11 @@ var nermal = (function (api) {
         var pad_len = Math.floor(Math.random() * 2048),
             padding = rand(pad_len),
             netstr_prefix = scrypt.encode_utf8(bytes.length + ":"),
-            padded = new Uint8Array(netstr_prefix.length + bytes.length + pad_len);
+            padded = new Uint8Array(netstr_prefix.length + bytes.length + pad_len + 1);
         padded.set(netstr_prefix, 0);
         padded.set(bytes, netstr_prefix.length);
-        padded.set(padding, netstr_prefix.length + bytes.length);
+        padded[bytes.length + netstr_prefix.length] = 44; // comma
+        padded.set(padding, netstr_prefix.length + bytes.length + 1);
         return padded;
     }
     // undo pad()
@@ -160,14 +161,17 @@ var nermal = (function (api) {
         if (typeof ns !== "string") {
             throw err("namespace", "Namespace was not a string.");
         }
+        if (ns[0] === " ") {
+            throw err("namespace", "Namespaces cannot begin with space characters.");
+        }
         // we escape any special characters in the namespace with JSON.stringify():
-        ns = (ns === "") ? version : JSON.stringify(ns).slice(1, -1) + "/" + version;
+        ns = ns === "" ? version : ns + "/" + version;
         var key_obj = typeof key === "string" ? newKey(key) : key,
             ba_key = ba_from_bytes(sanitize_bin("key", key_obj.key, b64.dec)),
             salt = sanitize_bin("salt", key_obj.salt, b64.dec);
         nonce = sanitize_bin("nonce", nonce, b64.dec, rand.bind(rand, 16));
         data = sanitize_bin("data", data, scrypt.encode_utf8);
-        return ns + "\n" + b64.enc(salt) + "\n" + b64.enc(nonce) + "\n" +
+        return JSON.stringify(ns).slice(1, -1) + "\n" + b64.enc(salt) + "\n" + b64.enc(nonce) + "\n" +
             sjcl.codec.base64.fromBits(sjcl.mode.gcm.encrypt(
                 new sjcl.cipher.aes(ba_key),
                 ba_from_bytes(pad(data)),
@@ -181,8 +185,8 @@ var nermal = (function (api) {
             throw err("type", "Parameter `box` was not a string.");
         }
         key = typeof key === "string" ? getKey(box, key) : key;
-        var obj = box.split("\n").map(function (s) {
-                return JSON.parse('"' + s + '"');
+        var obj = box.trim().split("\n").map(function (s) {
+                return JSON.parse('"' + s.trim() + '"');
             }),
             ns = obj[0].split("/"),
             data;
@@ -193,7 +197,7 @@ var nermal = (function (api) {
         try {
             data = unpad(bytes_from_ba(sjcl.mode.gcm.decrypt(
                 new sjcl.cipher.aes(ba_from_bytes(key.key)),
-                sjcl.codec.base64.toBits(obj[3]), // ciphertext
+                sjcl.codec.base64.toBits(obj.slice(3).join("")), // ciphertext
                 sjcl.codec.base64.toBits(obj[2]), // nonce
                 sjcl.codec.utf8String.toBits(obj[0]), // ns
                 128
