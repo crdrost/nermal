@@ -1,0 +1,204 @@
+#!/usr/bin/env node
+/* ncrypt 1.0.0 | (c) 2013 Chris Drost | Open-source under the 2-clause BSD License */
+
+/*jslint node: true, regexp: true */
+/*global Uint8Array */
+var program, bencode, nermal, Promise, promptly, fs, commandMatched = false;
+try {
+    Promise = require('promise');
+    program = require('commander');
+    bencode = require('bencode');
+    nermal = require('nermal');
+    promptly = require('promptly');
+    fs = require('fs');
+} catch (importerror) {
+    console.error("Some required libraries for this example were not installed in node:");
+    console.error("Needed: bencode commander nermal promise promptly");
+    console.error("Missing: " + /([^']+)'$/.exec(importerror)[1]);
+    process.exit(4);
+}
+var suffix = /^(.*)\.nermal$/;
+
+var formats = (function () {
+    "use strict";
+    var bin_err = "This file is not in the nermal/ncrypt binary format.";
+    return {
+        bin: {
+            enc: function (box) {
+                var strs = box.split("\n"),
+                    prefix = new Buffer(strs[0] + "\r\n", 'utf8'),
+                    data = strs.slice(1).map(function (x) { return new Buffer(x, 'base64'); });
+                return Buffer.concat([prefix, bencode.encode(data)]);
+            },
+            dec: function (bytes) {
+                var i = 0, prefix, data;
+                while (bytes[i] !== 10 && i < bytes.length) {
+                    i += 1;
+                }
+                if (i >= bytes.length) {
+                    throw new SyntaxError(bin_err + ' (must contain a newline)');
+                }
+                try {
+                    prefix = bytes.slice(0, i).toString('utf8');
+                    data = bencode.decode(bytes.slice(i + 1)).map(function (x) {
+                        return x.toString('base64');
+                    });
+                    return [prefix].concat(data).join("\n");
+                } catch (e) {
+                    throw new SyntaxError(bin_err + ' (' +  e + ')');
+                }
+            }
+        },
+        str: {
+            enc: function (box) {
+                var strs = box.split("\n"), out, i;
+                out = strs[0] + "\r\n" + strs[1] + "\r\n" + strs[2] + "\r\n";
+                for (i = 0; i < strs[3].length; i += 80) {
+                    out += strs[3].slice(i, i + 80) + "\r\n";
+                }
+                return new Buffer(out, 'utf8');
+            },
+            dec: function (bytes) {
+                try {
+                    return bytes.toString('utf8');
+                } catch (e) {
+                    throw new SyntaxError("The .nermal file should be a UTF-8 encoded string.");
+                }
+            }
+        }
+    };
+}());
+
+program.version('1.0.0')
+    .option('-p, --pass <pass>', "Use this password rather than prompting for one.")
+    .option('-b, --bin', "Use binary format to save space, rather than the Base64 format.")
+    .option('-f, --force-write', "Overwrite a file if it already exists.")
+    .description("Encrypt/decrypt nermal boxes; see https://github.com/drostie/nermal\n\nIn general sources and destinations of `-` use stdin/stdout, and when the destination is not given it is given a sane default (stdout, or source + '.nermal' for encryption, or source - '.nermal' for decryption).");
+
+// getpass: (prompt: string) -> Promise string
+// immediately prompts the user for a password; resolves when the password has
+// finally been inputted. If the -p flag is specified then this just returns 
+// that password.
+function getpass(prompt) {
+    "use strict";
+    return program.pass !== undefined ? Promise.from(program.pass) :
+            Promise.denodeify(promptly.prompt)(prompt, {silent: true});
+}
+
+// read: (source: string) -> Promise Buffer
+// immediately reads the source file, which is process.stdin if `source === '-'`.
+function read(source) {
+    "use strict";
+    var promise = source === "-" ? Promise.from(process.stdin.read()) :
+                Promise.denodeify(fs.readFile)(source);
+    return promise.then(null, function (err) {
+        throw new Error("while reading from '" + source + "': " + err);
+    });
+}
+// write: (dest: string) -> (bytes: Buffer) -> Promise null
+// creates a writer which can be chained with .then() to write a buffer to a 
+// file.
+function write(dest) {
+    "use strict";
+    return function (bytes) {
+        var promise = dest === "-" ? Promise.from(process.stdout.end(bytes)) :
+                    Promise.denodeify(fs.writeFile)(dest, bytes, {mode: 384, flag: program.forceWrite ? 'w' : 'wx'});
+        return promise.then(null, function (err) {
+            if (/^Error: EEXIST,/.test(err.toString())) {
+                throw new Error("file '" + dest + "' already exists; refusing to overwrite it.");
+            }
+            throw new Error("while writing to '" + dest + "': " + err);
+        });
+    };
+}
+// confirmPass :: (pass: string) -> Promise string
+// immediately requests another password and verifies that it is equal to `pass`,
+// setting the promises into rejection if they are not.
+function confirmPass(pass) {
+    "use strict";
+    return getpass("Confirm: ").then(function (p) {
+        if (p === pass) {
+            return pass;
+        }
+        throw new Error("Passwords did not match.");
+    });
+}
+
+// simultaneously: (obj: dict Promise $x) -> Promise dict $x
+// Aggregates a bunch of simultaneously-evaluated promises into a single promise
+// which resolves when all of them are complete. Basically the reason that 
+// they're simultaneous is that Promises are not lazy evaluation; they start 
+// working when the promise gets created.
+function simultaneously(obj) {
+    "use strict";
+    var key, out = Promise.from({});
+    // set: (k: string, p: Promise $x) -> (e: dict $x) -> Promise dict $x
+    // used to bind the key and promise
+    function set(k, p) {
+        return function (e) {
+            return p.then(function (x) { e[k] = x; return e; });
+        };
+    }
+    for (key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            out = out.then(set(key, obj[key]));
+        }
+    }
+    return out;
+}
+
+function run(promise) {
+    "use strict";
+    commandMatched = true;
+    return promise.then(
+        function success() {
+            console.error("File recorded successfully.");
+            process.exit(0);
+        },
+        function error(errs) {
+            console.error((errs.length ? errs[0] : errs).toString());
+            process.exit(1);
+        }
+    );
+}
+
+program.command("box <source> [dest]")
+    .description("Encrypt source file as a nermal container, saving to dest.")
+    .action(function (source, dest) {
+        "use strict";
+        dest = dest || (source === '-' ? '-' : source + '.nermal');
+        var format = formats[program.bin ? 'bin' : 'str'];
+        run(
+            simultaneously({
+                pass: getpass("Password: ").then(confirmPass),
+                data: read(source).then(Uint8Array)
+            }).then(function (env) {
+                return format.enc(nermal.encrypt("ncrypt 1.0.0", env.data, env.pass));
+            }).then(write(dest))
+        );
+    });
+
+program.command("unbox <source> [dest]")
+    .description("Decrypt source file, restoring the original as dest.")
+    .action(function (source, dest) {
+        "use strict";
+        if (!dest && source !== "-"  && !suffix.test(source)) {
+            console.error("Could not determine destination filename.\nThe source must either be `-` or end in `.nermal` or the destination must be explicitly specified.");
+            return process.exit(2);
+        }
+        var format = formats[program.bin ? 'bin' : 'str'];
+        run(
+            simultaneously({
+                pass: getpass("Password: "),
+                data: read(source).then(format.dec)
+            }).then(function (env) {
+                return new Buffer(nermal.decrypt(env.data, env.pass, true));
+            }).then(write(dest))
+        );
+    });
+
+program.parse(process.argv);
+
+if (!commandMatched) {
+    program.help();
+}
