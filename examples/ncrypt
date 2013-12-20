@@ -1,9 +1,18 @@
 #!/usr/bin/env node
-/* ncrypt 1.0.0 | (c) 2013 Chris Drost | Open-source under the 2-clause BSD License */
+/* ncrypt 1.0.1 | (c) 2013 Chris Drost | Open-source under the 2-clause BSD License */
+
+/*
+ * This script encrypts/decrypts whole files with nermal. Some of the optional
+ * flags allow it to use a special binary format distinct from nermal, which is
+ * simple to transcode because nermal boxes are '\n'-separated strings. However,
+ * it can also work to decrypt an arbitrary nermal box to stdout, if you have
+ * it sitting in a file.
+ */
+ 
 
 /*jslint node: true, regexp: true */
 /*global Uint8Array */
-var program, bencode, nermal, Promise, promptly, fs, commandMatched = false;
+var version = '1.0.1', program, bencode, nermal, Promise, promptly, fs, commandMatched = false;
 try {
     Promise = require('promise');
     program = require('commander');
@@ -69,7 +78,7 @@ var formats = (function () {
     };
 }());
 
-program.version('1.0.0')
+program.version(version)
     .option('-p, --pass <pass>', "Use this password rather than prompting for one.")
     .option('-b, --bin', "Use binary format to save space, rather than the Base64 format.")
     .option('-f, --force-write', "Overwrite a file if it already exists.")
@@ -101,7 +110,7 @@ function read(source) {
 function write(dest) {
     "use strict";
     return function (bytes) {
-        var promise = dest === "-" ? Promise.from(process.stdout.end(bytes)) :
+        var promise = dest === "-" ? Promise.from(process.stdout.write(bytes)) :
                     Promise.denodeify(fs.writeFile)(dest, bytes, {mode: 384, flag: program.forceWrite ? 'w' : 'wx'});
         return promise.then(null, function (err) {
             if (/^Error: EEXIST,/.test(err.toString())) {
@@ -173,7 +182,7 @@ program.command("box <source> [dest]")
                 pass: getpass("Password: ").then(confirmPass),
                 data: read(source).then(Uint8Array)
             }).then(function (env) {
-                return format.enc(nermal.encrypt("ncrypt 1.0.0", env.data, env.pass));
+                return format.enc(nermal.encrypt("ncrypt " + version, env.data, env.pass));
             }).then(write(dest))
         );
     });
