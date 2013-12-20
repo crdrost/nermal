@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* ncrypt 1.0.1 | (c) 2013 Chris Drost | Open-source under the 2-clause BSD License */
+/* ncrypt 1.0.2 | (c) 2013 Chris Drost | Open-source under the 2-clause BSD License */
 
 /*
  * This script encrypts/decrypts whole files with nermal. Some of the optional
@@ -12,7 +12,7 @@
 
 /*jslint node: true, regexp: true */
 /*global Uint8Array */
-var version = '1.0.1', program, bencode, nermal, Promise, promptly, fs, commandMatched = false;
+var version = '1.0.2', program, bencode, nermal, Promise, promptly, fs, commandMatched = false;
 try {
     Promise = require('promise');
     program = require('commander');
@@ -156,12 +156,14 @@ function simultaneously(obj) {
     return out;
 }
 
-function run(promise) {
+function run(promise, print_recorded) {
     "use strict";
     commandMatched = true;
     return promise.then(
         function success() {
-            console.error("File recorded successfully.");
+            if (print_recorded) {
+                console.error("File recorded successfully.");
+            }
             process.exit(0);
         },
         function error(errs) {
@@ -183,7 +185,8 @@ program.command("box <source> [dest]")
                 data: read(source).then(Uint8Array)
             }).then(function (env) {
                 return format.enc(nermal.encrypt("ncrypt " + version, env.data, env.pass));
-            }).then(write(dest))
+            }).then(write(dest)),
+            dest !== "-"
         );
     });
 
@@ -202,7 +205,8 @@ program.command("unbox <source> [dest]")
                 data: read(source).then(format.dec)
             }).then(function (env) {
                 return new Buffer(nermal.decrypt(env.data, env.pass, true));
-            }).then(write(dest))
+            }).then(write(dest)),
+            dest !== "-"
         );
     });
 
