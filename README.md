@@ -24,9 +24,10 @@ client-side in the browser. To use with node:
     npm install nermal
 
 To use with the browser, you will need to load the files for [SJCL][sjcl] and
-[scrypt][scrypt] in your HTML file first, then include `nermal.js` with a 
-script tag -- it will initialize `scrypt` for you. I may eventually release a
-packed version which contains all of the source for the browser.
+[scrypt][scrypt] in your HTML file first, then include `nermal.js` or 
+`nermal-1.1.2_browser.min.js` with a script tag -- it will initialize `scrypt`
+for you. I may eventually release a packed version which contains all of the 
+source for the browser.
 
 # Usage
 Nermal has a minimalist API. A nermal box is ultimately just a JavaScript 
