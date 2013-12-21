@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* tagaloop 1.0.0 | (c) 2013 Chris Drost | Open-source under the 2-clause BSD License */
+/* tagaloop 1.0.1 | (c) 2013 Chris Drost | Open-source under the 2-clause BSD License */
 
 /* 
  * This script starts an interactive loop for managing a file of tagged strings,
@@ -151,18 +151,24 @@ function interactive(welcome, prompt, lib, parse_args) {
 
 var version = '1.0.0',
     name = 'keyval ' + version,
-    nermal = require('../nermal.js'),
     readline = require('readline'),
     crypto = require('crypto'),
     promptly = require('promptly'),
     fs = require('fs'),
     argv = process.argv[0] === "node" ? process.argv.slice(1) : process.argv,
     altered = false,
+    nermal,
     commands,
     filename,
     key,
     data,
     commands;
+
+try {
+    nermal = require('nermal');
+} catch (e) {
+    nermal = require('../nermal.js');
+}
 
 if (argv.length !== 2) {
     console.error("Usage: " + argv[0] + " <file>");
