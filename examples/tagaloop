@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* tagaloop 1.0.1 | (c) 2013 Chris Drost | Open-source under the 2-clause BSD License */
+/* tagaloop 1.0.2 | (c) 2013 Chris Drost | Open-source under the 2-clause BSD License */
 
 /* 
  * This script starts an interactive loop for managing a file of tagged strings,
@@ -149,8 +149,8 @@ function interactive(welcome, prompt, lib, parse_args) {
     rl.prompt();
 }
 
-var version = '1.0.0',
-    name = 'keyval ' + version,
+var version = '1.0.2',
+    name = 'tagaloop ' + version,
     readline = require('readline'),
     crypto = require('crypto'),
     promptly = require('promptly'),
