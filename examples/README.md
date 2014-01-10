@@ -60,8 +60,8 @@ To install the latest version with wget:
 # tagaloop
 I wrote `tagaloop` to manage my passwords file. It is substantially different
 from `ncrypt` and rather than having a Unix command-line interface, it runs a
-read-eval-print loop or REPL -- hence the 'loop' in the name. It manages a file
-of tagged strings interactively, allowing you to grep across the tags with
+read-eval-print loop -- hence the 'loop' in the name. It manages a file of
+tagged strings interactively, allowing you to grep across the tags with
 JavaScript regular expressions. Here's some example usage:
 
     drostie@signy:/tmp$ tagaloop example
