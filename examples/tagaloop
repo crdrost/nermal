@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* tagaloop 1.0.2 | (c) 2013 Chris Drost | Open-source under the 2-clause BSD License */
+/* tagaloop 2.0.0 | (c) 2013 Chris Drost | Open-source under the 2-clause BSD License */
 
 /* 
  * This script starts an interactive loop for managing a file of tagged strings,
@@ -13,7 +13,7 @@
  * to pay the scrypt() penalty when you are saving the file because the key has
  * already been set up at that time.
  */
- 
+
 /*jslint node: true, stupid: true, evil: true */
 /*global require, Buffer */
 
@@ -90,7 +90,7 @@ function interactive(welcome, prompt, lib, parse_args) {
             try {
                 console.log(eval(js));
             } catch (e) {
-                console.error(e.toString);
+                console.error(e.toString());
             }
         }
     };
@@ -149,8 +149,7 @@ function interactive(welcome, prompt, lib, parse_args) {
     rl.prompt();
 }
 
-var version = '1.0.2',
-    name = 'tagaloop ' + version,
+var name = 'tagaloop 2.0.0',
     readline = require('readline'),
     crypto = require('crypto'),
     promptly = require('promptly'),
@@ -177,30 +176,18 @@ if (argv.length !== 2) {
 }
 filename = argv[1];
 
-/* generate a new ID string which is not used in `data`. This uses Date.now()
- * to generate new times and encodes them as Base64, using a counter to resolve
- * collisions.
- */
+/* generate a new ID string which is not used in `data`. These are currently random. */
 function newID() {
     "use strict";
-    var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-.",
-        out,
-        n = 0;
-    function id(dt) {
-        /* Generate an ID based on the current time plus dt. */
-        var t = Date.now() + (dt || 0), s = "";
-        while (t > 0) {
-            s = alphabet[t % 64] + s;
-            t = Math.floor(t / 64);
-        }
-        while (s.length < 8) {
-            s = "A" + s;
-        }
-        return s;
+    function rewriteB64(b64s) {
+        return b64s.replace(/\+/g, "-").replace(/\//g, ".");
+    }
+    var out;
+    function id() {
+        return rewriteB64(crypto.pseudoRandomBytes(6).toString('base64'));
     }
     do {
-        n += 1;
-        out = id(n);
+        out = id();
     } while (data.hasOwnProperty(out));
     return out;
 }
@@ -242,8 +229,8 @@ commands = {
             "use strict";
             var self = this;
             this.question("String: ", function (str) {
-                var id = newID(data);
-                data[id] = [label, str];
+                var id = newID();
+                data[id] = [Date.now(), label, str];
                 console.log("Added with id: " + id);
                 altered = true;
                 self.prompt();
@@ -261,7 +248,8 @@ commands = {
                 console.error("Usage: relabel <id> <new_label>.");
             } else {
                 checkID(id, function () {
-                    data[id][0] = args.slice(n + 1);
+                    data[id][0] = Date.now();
+                    data[id][1] = args.slice(n + 1);
                     altered = true;
                 });
             }
@@ -275,9 +263,10 @@ commands = {
             "use strict";
             var self = this;
             checkID(id, function () {
-                console.log("Old string: " + data[id][1]);
+                console.log("Old string: " + data[id][2]);
                 self.question("New string: ", function (answer) {
-                    data[id][1] = answer;
+                    data[id][0] = Date.now();
+                    data[id][2] = answer;
                     altered = true;
                     self.prompt();
                 });
@@ -304,7 +293,7 @@ commands = {
         run: function (id) {
             "use strict";
             checkID(id, function () {
-                console.log(id + " | " + data[id].join(" | "));
+                console.log(id + " | " + data[id].slice(1).join(" | "));
             });
         },
         vals: ids
@@ -316,9 +305,9 @@ commands = {
         run: function (s) {
             "use strict";
             var r = new RegExp(s, "i");
-            keys(data).forEach(function (id) {
-                if (r.exec(data[id][0])) {
-                    console.log(id + " | " + data[id].join(" | "));
+            keys(data).sort(function (x, y) { return data[x][0] - data[y][0]; }).forEach(function (id) {
+                if (r.exec(data[id][1])) {
+                    console.log(id + " | " + data[id].slice(1).join(" | "));
                 }
             });
         }
@@ -423,6 +412,10 @@ fs.exists(filename, function (file_exists) {
             var file_contents;
             try {
                 file_contents = fs.readFileSync(filename, {encoding: 'utf8'});
+                if (file_contents.slice(0, 11) !== "tagaloop 2.") {
+                    console.error("This file is not a tagaloop 2.x file.");
+                    // process.exit(1);
+                }
                 key = nermal.getKey(file_contents, pass);
                 data = JSON.parse(nermal.decrypt(file_contents, key));
                 run();
