@@ -145,9 +145,9 @@ need to put them in some directory of executables. I recommend
 `~/node_modules/.bin`; if this is not in your `$PATH` then you will want to put
 it there. To do this for the current session of your console:
 
-    PATH=$PATH:`echo ~/node_modules/.bin`
+    PATH="$PATH":`echo ~/node_modules/.bin`
 
 To do this whenever you start up (e.g.) Bash, you will have to instead use the
 `bashrc` file:
 
-    echo 'PATH=$PATH:'`echo ~/node_modules/.bin` >> ~/.bashrc
+    echo 'PATH="$PATH":'`echo ~/node_modules/.bin` >> ~/.bashrc
