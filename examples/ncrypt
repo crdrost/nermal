@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* ncrypt 1.0.2 | (c) 2013 Chris Drost | Open-source under the 2-clause BSD License */
+/* ncrypt 1.1.0 | (c) 2013 Chris Drost | Open-source under the 2-clause BSD License */
 
 /*
  * This script encrypts/decrypts whole files with nermal. Some of the optional
@@ -12,7 +12,7 @@
 
 /*jslint node: true, regexp: true */
 /*global Uint8Array */
-var version = '1.0.2', program, bencode, nermal, Promise, promptly, fs, commandMatched = false;
+var version = '1.1.0', program, bencode, nermal, Promise, promptly, fs, commandMatched = false;
 try {
     Promise = require('promise');
     program = require('commander');
@@ -81,6 +81,7 @@ var formats = (function () {
 program.version(version)
     .option('-p, --pass <pass>', "Use this password rather than prompting for one.")
     .option('-b, --bin', "Use binary format to save space, rather than the Base64 format.")
+    .option('-n, --namespace <ns>', "With `box`, use this namespace rather than 'ncrypt %v'.".replace('%v', version))
     .option('-f, --force-write', "Overwrite a file if it already exists.")
     .description("Encrypt/decrypt nermal boxes; see https://github.com/drostie/nermal\n\nIn general sources and destinations of `-` use stdin/stdout, and when the destination is not given it is given a sane default (stdout, or source + '.nermal' for encryption, or source - '.nermal' for decryption).");
 
@@ -178,13 +179,14 @@ program.command("box <source> [dest]")
     .action(function (source, dest) {
         "use strict";
         dest = dest || (source === '-' ? '-' : source + '.nermal');
-        var format = formats[program.bin ? 'bin' : 'str'];
+        var format = formats[program.bin ? 'bin' : 'str'],
+            ns = program.namespace || "ncrypt " + version;
         run(
             simultaneously({
                 pass: getpass("Password: ").then(confirmPass),
                 data: read(source).then(Uint8Array)
             }).then(function (env) {
-                return format.enc(nermal.encrypt("ncrypt " + version, env.data, env.pass));
+                return format.enc(nermal.encrypt(ns, env.data, env.pass));
             }).then(write(dest)),
             dest !== "-"
         );
