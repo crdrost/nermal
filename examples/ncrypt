@@ -8,7 +8,7 @@
  * it can also work to decrypt an arbitrary nermal box to stdout, if you have
  * it sitting in a file.
  */
- 
+
 
 /*jslint node: true, regexp: true */
 /*global Uint8Array */
