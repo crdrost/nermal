@@ -1,4 +1,7 @@
-/*! nermal v1.1.2 | (c) 2013 Chris Drost | Open-source under the 2-clause BSD License
+/* nermal v 1.1.3 | (c) 2017 Chris Drost
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
 /*global window, exports, require, Buffer, Uint8Array */
@@ -7,7 +10,7 @@
 var nermal = (function (api) {
     "use strict";
     var b64, sjcl, scrypt, crypto, rand, ba_from_bytes, bytes_from_ba, version, re_compatible, err;
-    version = "nermal 1.1.2";
+    version = "nermal 1.1.3";
     re_compatible = /^nermal 1\./;
     err = function (mode, msg) { return new Error("nermal/" + mode + ": " + msg); };
 

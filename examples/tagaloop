@@ -1,5 +1,9 @@
 #!/usr/bin/env node
-/* tagaloop 2.0.0 | (c) 2013 Chris Drost | Open-source under the 2-clause BSD License */
+/* tagaloop 2.0.1 | (c) 2017 Chris Drost
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 /* 
  * This script starts an interactive loop for managing a file of tagged strings,
@@ -149,7 +153,7 @@ function interactive(welcome, prompt, lib, parse_args) {
     rl.prompt();
 }
 
-var name = 'tagaloop 2.0.0',
+var name = 'tagaloop 2.0.1',
     readline = require('readline'),
     crypto = require('crypto'),
     promptly = require('promptly'),

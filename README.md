@@ -1,21 +1,29 @@
 # Nermal!
-Nermal makes securing your JavaScript application's data much easier.
+Nermal secures your JavaScript application's data easily.
 
 Nermal does private-key *authenticated encryption* with a trusted algorithm 
 ([AES-256][aes]/[GCM][gcm]) implemented by a trusted library ([SJCL][sjcl]) with
-the best existent key-derivation system ([scrypt][scrypt]). It keeps track of
-salts for its keys, and automatically generates random nonces. It also pads the
-data with a random number of random bytes, which makes it harder to determine
-what sort of operations are being performed on the data.
+a pretty good key-derivation system ([scrypt][scrypt]). It keeps track of salts
+for its keys, and automatically generates random nonces. It also pads the data 
+with a random number of random bytes, which makes it harder to determine what 
+sort of operations are being performed on the data: inserts and deletions become
+harder to detect as the file length is known to randomly fluctuate.
 
 Authenticated encryption basically means that when you decrypt the data, you can
 be confident that it's something which you encrypted, in the format that you
 encrypted it in. Nermal also authenticates and stores a *namespace string*, so
 that there is a nice place for you to store version numbers so that you can
-reorganize your data format later. 
+reorganize your data format later.
 
 Nermal boxes are newline-separated ASCII strings<sup>[note 1]</sup>, so you can
 save them to disk or transmit them as JSON or whatever you want, interoperably.
+
+# License
+Nermal is licensed under the Mozilla Public License v2.0. This is a by-file
+copyleft license: so if you do not modify the source files of Nermal you may
+release your code under any license you like; but any modified source files 
+continue to be free software under the MPL. I find it to be much more readable
+and easier to reason about than the LGPL.
 
 # Installation
 Nermal was written to be interoperable with [Node.js][node], but also to work

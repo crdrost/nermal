@@ -151,3 +151,5 @@ To do this whenever you start up (e.g.) Bash, you will have to instead use the
 `bashrc` file:
 
     echo 'PATH="$PATH":'`echo ~/node_modules/.bin` >> ~/.bashrc
+
+
